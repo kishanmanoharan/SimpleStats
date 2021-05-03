@@ -1,0 +1,19 @@
+0: {Identifier: "/amdcpu/0/clock/1", Index: 1, InstanceId: "3885", Max: 4200.219, Min: 2880.15, …}
+1: {Identifier: "/amdcpu/0/clock/2", Index: 2, InstanceId: "3886", Max: 4200.219, Min: 2880.15, …}
+2: {Identifier: "/amdcpu/0/clock/3", Index: 3, InstanceId: "3887", Max: 4200.219, Min: 2880.15, …}
+3: {Identifier: "/amdcpu/0/clock/4", Index: 4, InstanceId: "3888", Max: 4200.219, Min: 2880.15, …}
+4: {Identifier: "/amdcpu/0/clock/5", Index: 5, InstanceId: "3889", Max: 4200.219, Min: 2880.15, …}
+5: {Identifier: "/amdcpu/0/clock/6", Index: 6, InstanceId: "3890", Max: 4200.219, Min: 2880.15, …}
+6: {Identifier: "/amdcpu/0/load/0", Index: 0, InstanceId: "3846", Max: 81.06061, Min: 0.5208313, …}
+7: {Identifier: "/amdcpu/0/temperature/0", Index: 0, InstanceId: "3883", Max: 59.375, Min: 30.375, …}
+8: {Identifier: "/amdcpu/0/power/0", Index: 0, InstanceId: "3847", Max: 67.07766, Min: 25.80608, …}
+9: {Identifier: "/nvidiagpu/0/clock/0", Index: 0, InstanceId: "3861", Max: 1995, Min: 300, …}
+10: {Identifier: "/nvidiagpu/0/load/0", Index: 0, InstanceId: "3864", Max: 100, Min: 0, …}
+11: {Identifier: "/nvidiagpu/0/temperature/0", Index: 0, InstanceId: "3860", Max: 70, Min: 33, …}
+12: {Identifier: "/nvidiagpu/0/power/0", Index: 0, InstanceId: "3874", Max: 132.306, Min: 17.905, …}
+13: {Identifier: "/nvidiagpu/0/load/4", Index: 4, InstanceId: "3873", Max: 69.9, Min: 8.576584, …}
+14: {Identifier: "/nvidiagpu/0/smalldata/2", Index: 2, InstanceId: "3871", Max: 4294.656, Min: 526.9453, …}
+15: {Identifier: "/nvidiagpu/0/smalldata/3", Index: 3, InstanceId: "3870", Max: 6144, Min: 6144, …}
+16: {Identifier: "/ram/load/0", Index: 0, InstanceId: "3856", Max: 71.14836, Min: 38.92641, …}
+17: {Identifier: "/ram/data/0", Index: 0, InstanceId: "3857", Max: 11.34854, Min: 6.208969, …}
+18: {Identifier: "/ram/data/1", Index: 1, InstanceId: 
