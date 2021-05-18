@@ -34,7 +34,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-
 var sensors;
 var indexes = [41, 6, 7, 36, 37, 27, 15, 46, 17, 40, 2, 13, 34, 25, 33, 32, 14, 16, 39]
 function get_sensors() {

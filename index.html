@@ -9,58 +9,88 @@
 </head>
 <body>
     <style>
+        :root{
+            --text: #ffffff;
+            --background: #121212;
+            --section-background: #222222;
+            --sub-background: #2a2a2a;
+            --text-over: #dc3545;
+        }
+
         html, body{
-            background-color: #121212;
-            color: #ffffff;
+            background-color: var(--background);
+            color: var(--text);
         }
 
         nav{
-            background-color: #212121 !important;
+            background-color: var(--background) !important;
         }
 
         .draggable{
-            width: 90vw;
+            width: 85vw;
             -webkit-user-select: none;
             -webkit-app-region: drag;
         }
         .main-card{
-            background-color: #222;
+            background-color: var(--section-background);
             border-radius: 15px;
             padding: 2vh 2vw;
         }
         .sub-card{
-            background-color: #333;
+            background-color: var(--sub-background);
             border-radius: 15px;
-            padding: 1vh 1vw;
+            padding: 1vh 1.5vw;
             margin: 1vh 1vw;
             height: fit-content;
-            box-shadow: 0px 0px 5px #555;
+            box-shadow: 0px 0px 3px var(--sub-background);
+        }
+
+        #error_div{
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            z-index: 100;
+            opacity: 0;
+            overflow: hidden;
+            background-color: #00000000;
+            backdrop-filter: blur(15px) brightness(.6);
+            transition: opacity 0.5s ease-in-out !important;
         }
 
     </style>
 
+    <div id="error_div" class="container-fluid" style="display: none;">
+        <div class="row">
+            <div class="col-12 position-absolute top-50 start-50 translate-middle text-center">
+                <h3>Could not connect to OpenHardwareMonitor</h3>
+                <p>Please ensure that OpenHardwareMonitor is installed and running, then restart the application</p>
+                <button type="button" onclick="window.close()" class="btn btn-sm btn-outline-danger">Close</button>
+            </div>
+        </div>
+        
+    </div>
     <nav class="navbar navbar-dark">
         <div class="container-fluid">
             <div class="draggable">
                 <span class="navbar-brand mb-0 h1">SimpleStats</span>
-            </div>
+            </div>               
             <button id="close-btn" type="button" onclick="window.close()" class="btn btn-sm btn-outline-danger" style="float: right;">&#x2715;</button>
         </div>
     </nav>
     <br>
-    <div class="container">
+    <div id="main_div" class="container">
         <div class="row">
             <div class="col-12 main-card my-2">
                 <h3>CPU</h3>
                 <div class="row">
                     <div class="col-4 sub-card">
-                        <h5 id="cpu_clock" class="mb-4">Clock</h5>
+                        <h5 id="cpu_clock" class="mb-3">Clock</h5>
                         <div>
                             <canvas id="cpu_clock_chart"></canvas>
                         </div>
                     </div>
                     <div class="col-4 sub-card">
-                        <h5 id="cpu_load" class="mb-4">Load</h5>
+                        <h5 id="cpu_load" class="mb-3">Load</h5>
                         <div>
                             <canvas id="cpu_load_chart"></canvas>
                         </div>
@@ -87,13 +117,13 @@
                 <h3>GPU</h3>
                 <div class="row">
                     <div class="col-4 sub-card">
-                        <h5 id="gpu_clock" class="mb-4">Clock</h5>
+                        <h5 id="gpu_clock" class="mb-3">Clock</h5>
                         <div>
                             <canvas id="gpu_clock_chart"></canvas>
                         </div>
                     </div>
                     <div class="col-4 sub-card">
-                        <h5 id="gpu_load" class="mb-4">Load</h5>
+                        <h5 id="gpu_load" class="mb-3">Load</h5>
                         <div>
                             <canvas id="gpu_load_chart"></canvas>
                         </div>
@@ -137,15 +167,53 @@
             </div>
         </div>
     </div>
+    
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Limit values for CPU
+        var cpu_clock_limit = 4.2;
+        var cpu_load_limit = 80;
+        var cpu_temp_limit = 60;
+        var cpu_power_limit = 50;
+        // Limit values for GPU
+        var gpu_clock_limit = 1.5;
+        var gpu_load_limit = 80;
+        var gpu_temp_limit = 70;
+        var gpu_power_limit = 110;
+
+        
         var sensor_data;
         var ipcRenderer = require('electron').ipcRenderer;
         ipcRenderer.on('sensor-data', function (event, sensor) {
             sensor_data = sensor
             update_values(sensor_data);
+            timeout = 0;
         });
+
+        async function change_offline() {
+            //document.getElementById('error_div').style.opacity = 0;
+            document.getElementById('error_div').style.display = 'block';
+            await sleep(100);
+            document.getElementById('error_div').style.opacity = 1;
+            //document.getElementById('error_div').classList.add('show');
+        }
+        
+        var timeout = 0;
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        async function update(time) {
+            while (true) {
+                console.log('CHECK');
+                await sleep(time);
+                timeout += 1;
+                if (sensor_data == undefined || timeout > 5) {
+                    change_offline()
+                }
+            }
+        }
+        update(1000);
 
         var cpu_clock_data = [0];
         var cpu_load_data = [0];
@@ -158,20 +226,33 @@
             document.getElementById('cpu_clock').innerText = 'Clock - ' + (cpu_clock).toFixed(2) + 'GHz';
             cpu_clock_data = update_chart_data(cpu_clock_data, Number(cpu_clock.toFixed(2)) , limit);
             update_data(cpu_clock_chart, cpu_clock_data);
+            set_limit('cpu_clock', Number(cpu_clock.toFixed(2)), cpu_clock_limit);
+
             document.getElementById('cpu_load').innerText = 'Load - ' + (sensor_data[6].Value).toFixed(0) + '%';
             cpu_load_data = update_chart_data(cpu_load_data, Number((sensor_data[6].Value).toFixed(0)), limit);
             update_data(cpu_load_chart, cpu_load_data);
+            set_limit('cpu_load', Number((sensor_data[6].Value).toFixed(0)), cpu_load_limit);
+
             document.getElementById('gpu_clock').innerText = 'Clock - ' + (sensor_data[9].Value/1000).toFixed(2) + 'GHz';
             gpu_clock_data = update_chart_data(gpu_clock_data, Number((sensor_data[9].Value/1000).toFixed(2)), limit);
             update_data(gpu_clock_chart, gpu_clock_data);
+            set_limit('gpu_clock', Number((sensor_data[9].Value/1000).toFixed(2)), gpu_clock_limit);
+
             document.getElementById('gpu_load').innerText = 'Load - ' + (sensor_data[10].Value).toFixed(0) + '%';
             gpu_load_data = update_chart_data(gpu_load_data, Number((sensor_data[10].Value).toFixed(0)), limit);
             update_data(gpu_load_chart, gpu_load_data);
+            set_limit('gpu_load', Number((sensor_data[10].Value).toFixed(0)), gpu_load_limit);
+
             document.getElementById('cpu_temp').innerText = (sensor_data[7].Value).toFixed(0) + ' C';
+            set_limit('cpu_temp', Number((sensor_data[7].Value).toFixed(0)), cpu_temp_limit);
             document.getElementById('cpu_power').innerText = (sensor_data[8].Value).toFixed(2) + ' W';
+            set_limit('cpu_power', Number((sensor_data[8].Value).toFixed(2)), cpu_power_limit);
             document.getElementById('gpu_temp').innerText = (sensor_data[11].Value).toFixed(0) + ' C';
+            set_limit('gpu_temp', Number((sensor_data[11].Value).toFixed(0)), gpu_temp_limit);
             document.getElementById('gpu_power').innerText = (sensor_data[12].Value).toFixed(2) + ' W';
+            set_limit('gpu_power', Number((sensor_data[12].Value).toFixed(2)), gpu_power_limit);
             document.getElementById('ram_load').innerText = (sensor_data[16].Value).toFixed(0) + '%';
+            set_limit('ram_load', Number((sensor_data[16].Value).toFixed(0)), 80);
             document.getElementById('ram_free').innerText = (sensor_data[17].Value).toFixed(2) + ' GB';
             document.getElementById('ram_used').innerText = (sensor_data[18].Value).toFixed(2) + ' GB';
         }
@@ -184,7 +265,16 @@
             return array;
         }
 
-        const chart_config = {
+        function set_limit(element, value, limit) {
+            if (value >= limit) {
+                document.getElementById(element).style.color = 'var(--text-over)';
+            }
+            else {
+                document.getElementById(element).style.color = 'var(--text)';
+            }
+        }
+
+        const red_chart_config = {
             type: 'line',
             data:{
                 labels: ['10','9','8','7','6','5','4','3','2','1'],
@@ -193,7 +283,7 @@
                     pointRadius: 0,
                     borderWidth: 2,
                     fill: true,
-                    borderColor: 'rgb(255, 255, 255)',
+                    borderColor: 'rgb(255, 100, 100)',
                     data: [0],
                     tension: 0.4
                 }]
@@ -204,7 +294,40 @@
                         display: false
                     }
                 },
-                responsive: true
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+        const blue_chart_config = {
+            type: 'line',
+            data:{
+                labels: ['10','9','8','7','6','5','4','3','2','1'],
+                datasets: [{
+                    label: 'Value',
+                    pointRadius: 0,
+                    borderWidth: 2,
+                    fill: true,
+                    borderColor: 'rgb(100, 100, 255)',
+                    data: [0],
+                    tension: 0.4
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
             }
         };
 
@@ -213,10 +336,10 @@
             chart.update();
         }
 
-        var cpu_clock_chart = new Chart(document.getElementById('cpu_clock_chart'), chart_config);
-        var cpu_load_chart = new Chart(document.getElementById('cpu_load_chart'), chart_config);
-        var gpu_clock_chart = new Chart(document.getElementById('gpu_clock_chart'), chart_config);
-        var gpu_load_chart = new Chart(document.getElementById('gpu_load_chart'), chart_config);
+        var cpu_clock_chart = new Chart(document.getElementById('cpu_clock_chart'), blue_chart_config);
+        var cpu_load_chart = new Chart(document.getElementById('cpu_load_chart'), red_chart_config);
+        var gpu_clock_chart = new Chart(document.getElementById('gpu_clock_chart'), blue_chart_config);
+        var gpu_load_chart = new Chart(document.getElementById('gpu_load_chart'), red_chart_config);
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
